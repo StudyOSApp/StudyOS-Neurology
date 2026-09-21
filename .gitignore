@@ -1,0 +1,65 @@
+# Local operating-system and editor files
+.DS_Store
+**/.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Credentials and private/local configuration
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+*service-account*.json
+.npmrc
+.netrc
+.aws/
+.ssh/
+.config/
+.codex/
+.agents/
+supabase/.temp/
+supabase/.branches/
+
+# Temporary development, source extraction, and browser profiles
+tmp/
+temp/
+private/
+local/
+source_materials/
+lecture_materials/
+extracted_sources/
+rendered_pages/
+browser_profiles/
+playwright-report/
+test-results/
+*.log
+*.bak
+__pycache__/
+*.py[cod]
+.cache/
+node_modules/
+.venv/
+venv/
+
+# Raw instructor documents and recordings are not public project assets
+*.pdf
+*.ppt
+*.pptx
+*.doc
+*.docx
+*.keynote
+*.mp3
+*.mp4
+*.m4a
+*.wav
+*.mov
+
+# Internal alignment work: only the current final data export is public
+review_alignment/*
+!review_alignment/final_bank.json
