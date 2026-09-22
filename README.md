@@ -2,7 +2,13 @@
 
 A standalone Neurology quiz with an Exam 1 question bank, interactive learning guides, and visual study tools.
 
-## Run locally
+## PUBLIC QUIZ
+
+[https://studyosapp.github.io/StudyOS-Neurology/](https://studyosapp.github.io/StudyOS-Neurology/)
+
+Once GitHub Pages is enabled for this repository, the root URL redirects immediately to `Neurology.html`. That file remains the single source of truth for the quiz.
+
+## Local / developer use
 
 Download this repository's ZIP, extract it, and open **Neurology.html** in a modern browser. No installation, build step, account, or server is required. The interactive learning guide is not ready for student use: its quiz links and settings toggle are hidden. Its implementation and content are retained for future redesign and re-enabling.
 
