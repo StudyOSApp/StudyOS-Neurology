@@ -4,7 +4,7 @@ A standalone Neurology quiz with an Exam 1 question bank, interactive learning g
 
 ## Run locally
 
-Download this repository's ZIP, extract it, and open **Neurology.html** in a modern browser. No installation, build step, account, or server is required. The interactive guide opens from the quiz and closes back to your questions; it can also be opened separately as **Neurology_Interactive_Learning_Guide.html**.
+Download this repository's ZIP, extract it, and open **Neurology.html** in a modern browser. No installation, build step, account, or server is required. The interactive learning guide is not ready for student use: its quiz links and settings toggle are hidden. Its implementation and content are retained for future redesign and re-enabling.
 
 ## Exam 1
 
@@ -18,7 +18,7 @@ The quiz includes topic filters, flashcards, explanations, feedback settings, an
 ## Project files
 
 - `Neurology.html`: self-contained quiz and embedded interactive learning guide.
-- `Neurology_Interactive_Learning_Guide.html`: the same guide as a standalone page.
+- `Neurology_Interactive_Learning_Guide.html`: retained guide implementation; not currently offered for student use.
 - `review_alignment/final_bank.json`: the final 365-record question-bank export.
 - `Neurology_Exam1_Review_Aligned_Question_Bank.md`: readable question-bank export, including held records.
 - [Exam 1 coverage notes](docs/Exam-1-Coverage.md): counts, review limitations, and held IDs.

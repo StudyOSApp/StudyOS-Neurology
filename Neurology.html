@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Neurology Quiz + Study Guide</title>
+  <title>Neurology</title>
 
   <!-- Quiz Engine CSS -->
   <style>
@@ -1673,6 +1673,30 @@
       background:linear-gradient(135deg,var(--active),var(--unit-card));
     }
 
+    /* Temporarily hide review entry points; retain the guide and its wiring. */
+    body[data-interactive-review="paused"] .study-guide-launch-tab,
+    body[data-interactive-review="paused"] #visualGuideCard,
+    body[data-interactive-review="paused"] #learningGuideVisibilitySetting {
+      display:none;
+    }
+
+    .practice-heading {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      align-items:center;
+      gap:12px;
+      margin:16px 0 8px;
+      padding-bottom:5px;
+      border-bottom:2px solid var(--line);
+    }
+
+    .practice-heading h2 {
+      margin:0;
+      padding:0;
+      border:0;
+      white-space:nowrap;
+    }
+
     .primary-exam-tabs {
       display:flex;
       flex-wrap:wrap;
@@ -1680,7 +1704,7 @@
       gap:4px;
       width:max-content;
       max-width:100%;
-      margin:0 auto 10px;
+      margin:0 auto;
       padding:3px;
       border:1px solid var(--line);
       border-radius:9px;
@@ -1832,27 +1856,6 @@
       gap:8px;
     }
 
-    .feedback-toast {
-      min-height:0;
-      margin:0;
-      overflow:hidden;
-      border-radius:8px;
-      text-align:center;
-      font-weight:900;
-      transition:min-height .2s ease, padding .2s ease, opacity .2s ease;
-      opacity:0;
-    }
-
-    .feedback-toast.show {
-      min-height:38px;
-      margin:6px 0;
-      padding:7px 12px;
-      opacity:1;
-    }
-
-    .feedback-toast.correct { background:var(--feedback-correct-bg); color:var(--feedback-correct-text); }
-    .feedback-toast.incorrect { background:var(--feedback-wrong-bg); color:var(--feedback-wrong-text); }
-
     .qa-box.feedback-pulse-correct { animation:feedbackPulseCorrect .55s ease; }
     .qa-box.feedback-pulse-incorrect { animation:feedbackPulseIncorrect .45s ease; }
 
@@ -1864,6 +1867,10 @@
       50% { box-shadow:0 0 0 5px rgba(180,35,24,.20), var(--shadow); }
     }
 
+    @media (max-width:850px) {
+      .practice-heading { display:flex; flex-direction:column; align-items:stretch; }
+    }
+
     @media (max-width:700px) {
       .primary-exam-tabs { width:100%; }
       .primary-exam-tab { flex:1 1 44%; }
@@ -1873,10 +1880,10 @@
 
   </style>
 </head>
-<body>
+<body data-interactive-review="paused">
 <main>
   <div class="app-header">
-    <h1>Neurology Quiz + Study Guide</h1>
+    <h1>Neurology</h1>
     <div class="header-actions">
       <div class="studyos-brand" aria-label="StudyOS">
         <div class="studyos-wordmark">Study<span class="os">OS</span></div>
@@ -1888,13 +1895,15 @@
 
   <!-- Quiz Engine HTML -->
   <section id="practice" class="quiz-shell">
-    <h2>Interactive Practice</h2>
-    <nav id="primaryExamTabs" class="primary-exam-tabs" aria-label="Neurology exam banks">
+    <div class="practice-heading">
+      <h2>Interactive Practice</h2>
+      <nav id="primaryExamTabs" class="primary-exam-tabs" aria-label="Neurology exam banks">
       <button class="primary-exam-tab active" type="button" data-exam-tab="Exam 1" aria-pressed="true">Exam 1</button>
       <button class="primary-exam-tab" type="button" data-exam-tab="Exam 2" aria-pressed="false" disabled title="No content added yet">Exam 2</button>
       <button class="primary-exam-tab" type="button" data-exam-tab="Exam 3" aria-pressed="false" disabled title="No content added yet">Exam 3</button>
       <button class="primary-exam-tab" type="button" data-exam-tab="Exam 4" aria-pressed="false" disabled title="No content added yet">Exam 4</button>
-    </nav>
+      </nav>
+    </div>
     <nav id="practiceGroupTabs" aria-label="Exam 1 practice groups" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0">
       <button type="button" class="primary-exam-tab active" data-practice-group="Focused Exam Review" aria-pressed="true">Focused Exam Review</button>
       <button type="button" class="primary-exam-tab" data-practice-group="Additional Practice" aria-pressed="false">Additional Practice</button>
@@ -2022,7 +2031,7 @@
                   <span class="switch-ui" aria-hidden="true"></span>
                 </label>
 
-                <label class="switchline">
+                <label id="learningGuideVisibilitySetting" class="switchline">
                   <span>Show Learning Guide</span>
                   <input id="visualGuideToggle" type="checkbox" role="switch" checked>
                   <span class="switch-ui" aria-hidden="true"></span>
@@ -2067,7 +2076,6 @@
           <button id="markWrong" type="button" class="grade-wrong hidden">Missed it</button>
         </div>
 
-        <div id="feedbackToast" class="feedback-toast" role="status" aria-live="polite"></div>
 
         <div class="qa-bottom-dock">
           <div id="recentQuestionTrail" class="recent-trail" aria-label="Recent answered questions"></div>
@@ -14555,7 +14563,6 @@ document.addEventListener("DOMContentLoaded", function() {
   };
   var feedbackSettings = loadFeedbackSettings();
   var feedbackAudioContext = null;
-  var feedbackToastTimer = null;
   var flashcardPool = [];
   var flashcardIndex = 0;
 
@@ -14745,13 +14752,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function showFeedbackEffect(correct) {
-    var toast = feedbackControl("feedbackToast");
-    if (toast) {
-      toast.textContent = correct ? "✓ Nice work — keep going." : "Review the explanation, then try the concept again.";
-      toast.className = "feedback-toast show " + (correct ? "correct" : "incorrect");
-      window.clearTimeout(feedbackToastTimer);
-      feedbackToastTimer = window.setTimeout(function() { toast.className = "feedback-toast"; },1700);
-    }
     if (feedbackSettings.visualEffects) {
       var box = document.querySelector(".qa-box");
       if (box) {
@@ -15392,12 +15392,11 @@ document.addEventListener("DOMContentLoaded", function() {
         items.map(function(item) {
           var active = current && current.id === item.questionId ? " active" : "";
           var statusClass = item.correct ? "correct" : "wrong";
-          var mark = item.correct ? "✓" : "×";
           return "<button class=\"recent-trail-item " + statusClass + active +
             "\" type=\"button\" data-question-id=\"" + htmlEscape(item.questionId) +
             "\" aria-label=\"Question " + item.displayNumber + " " +
             (item.correct ? "correct" : "incorrect") + "\">" +
-            "<span>" + item.displayNumber + "</span><span aria-hidden=\"true\">" + mark + "</span></button>";
+            "<span>" + item.displayNumber + "</span></button>";
         }).join("") +
       "</div>";
 
