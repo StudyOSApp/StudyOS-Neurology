@@ -1950,11 +1950,7 @@
             <div id="weakestConceptsText" class="dashboard-mini-text">No weak concepts yet.</div>
           </div>
           <button id="openFlashcards" class="dashboard-flashcards-button" type="button"><span aria-hidden="true">▣</span><span>Flashcards</span></button>
-          <div id="visualGuideCard" class="dashboard-mini-card">
-            <div class="dashboard-mini-title">Interactive Learning Guide</div>
-            <div id="studyGuideSummary" class="dashboard-mini-text">Weeks 1–2 pathway building, tracing, and comparisons.</div>
-            <button id="openStudyGuide" class="dashboard-mini-action" type="button">Open Learning Guide</button>
-          </div>
+          <button id="openStudyGuide" class="dashboard-flashcards-button" type="button">Interactive Learning Guide</button>
           <button id="openSettingsDrawer" class="settings-open-button" type="button"><span aria-hidden="true">⚙</span><span>Quiz Settings</span></button>
         </div>
       </div>
@@ -16597,12 +16593,6 @@ document.addEventListener("DOMContentLoaded", function() {
       tabs.appendChild(btn);
     });
 
-    var guideBtn = document.createElement("button");
-    guideBtn.type = "button";
-    guideBtn.className = "unit-tab study-guide-launch-tab";
-    guideBtn.innerHTML = "<strong>Interactive Learning Guide</strong><span>Spinal Pathways</span>";
-    guideBtn.addEventListener("click", openFullStudyGuide);
-    tabs.appendChild(guideBtn);
   }
 
   function updateUnitIntro() {
@@ -16703,12 +16693,8 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function updateStudyGuideDashboard() {
-    var summary = document.getElementById("studyGuideSummary");
     var button = document.getElementById("openStudyGuide");
-    if (!summary || !button) return;
-    summary.textContent = "Weeks 1–2 pathway building, tracing, and comparisons.";
-    button.disabled = false;
-    button.textContent = "Open Learning Guide";
+    if (button) button.disabled = false;
   }
 
   function setStudyGuidePage(index) {
