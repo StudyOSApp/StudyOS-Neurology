@@ -209,12 +209,16 @@ function rebuildRouteSamples(){routeSamples=[];for(const seg of [...segments,...
 function overlap(a,b){return Math.max(0,Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y));}
 function nearestEdge(r,p){let x=Math.max(r.x,Math.min(r.x+r.w,p.x)),y=Math.max(r.y,Math.min(r.y+r.h,p.y));if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h){const d=[p.x-r.x,r.x+r.w-p.x,p.y-r.y,r.y+r.h-p.y],k=d.indexOf(Math.min(...d));if(k===0)x=r.x;if(k===1)x=r.x+r.w;if(k===2)y=r.y;if(k===3)y=r.y+r.h;}return{x,y};}
 function placeCard(anchor,w,h,occupied){
- const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const xs=[anchor.x-w-28,anchor.x+28],ys=[anchor.y-h/2,anchor.y-h-27,anchor.y+27];
+ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),centered=anchor.x>400&&anchor.x<600,vertical=anchor.y>=330,half=vertical?112:195;const xs=[anchor.x-w-28,anchor.x+28],ys=[anchor.y-h/2,anchor.y-h-27,anchor.y+27];
+ if(centered)xs.unshift(500-half-w-22,500+half+22);
  for(let x=18;x<=982-w;x+=18)xs.push(x);for(let y=60;y<=802-h;y+=14)ys.push(y);
  for(const b of calloutObstacles){xs.push(b.x-w-7,b.x+b.w+7);ys.push(b.y-h-6,b.y+b.h+6);}
+ const anatomyZones=[{x:405,y:325,w:190,h:495,weight:2400},{x:310,y:60,w:380,h:315,weight:2400}];
  let best=null,score=Infinity;
  for(const x0 of xs)for(const y0 of ys){const r={x:clamp(x0,18,982-w),y:clamp(y0,60,802-h),w,h};const e=nearestEdge(r,anchor);let cost=(Math.pow(e.x-anchor.x,2)+Math.pow(e.y-anchor.y,2))*.7;
   for(const b of calloutObstacles)cost+=overlap(r,b)*b.weight;
+  for(const b of anatomyZones)cost+=overlap(r,b)*b.weight;
+  if(centered&&vertical&&r.x>500)cost+=18000;
   for(const b of occupied)cost+=overlap({...r,x:r.x-8,y:r.y-8,w:w+16,h:h+16},b)*1000;
   for(const p of routeSamples)if(p.x>r.x-9&&p.x<r.x+w+9&&p.y>r.y-9&&p.y<r.y+h+9)cost+=3000;
   if(anchor.x>r.x-18&&anchor.x<r.x+w+18&&anchor.y>r.y-18&&anchor.y<r.y+h+18)cost+=100000;
@@ -223,7 +227,7 @@ function placeCard(anchor,w,h,occupied){
 }
 function wrapWords(text,max=29){const lines=[];let line='';for(const word of text.split(/\s+/)){if(line&&(line+' '+word).length>max){lines.push(line);line=word;}else line+=(line?' ':'')+word;}if(line)lines.push(line);return lines;}
 const calloutMeasure=document.createElement('canvas').getContext('2d');
-function fitCalloutLines(lines,font){calloutMeasure.font=font;const fitted=[];for(const source of lines){let line='';for(const word of source.split(/\s+/)){const next=line?line+' '+word:word;if(line&&calloutMeasure.measureText(next).width>211){fitted.push(line);line=word;}else line=next;}if(line)fitted.push(line);}return fitted;}
+function fitCalloutLines(lines,font,maxWidth=286){calloutMeasure.font=font;const fitted=[];for(const source of lines){let line='';for(const word of source.split(/\s+/)){const next=line?line+' '+word:word;if(line&&calloutMeasure.measureText(next).width>maxWidth){fitted.push(line);line=word;}else line=next;}if(line)fitted.push(line);}return fitted;}
 function compactNode(n,id){
  const raw=n.label.replace(/^(LEFT|RIGHT)\s*·?\s*/,'');let title=raw,meaning='';
  if(n.kind==='cross'&&/ANTERIOR WHITE COMMISSURE|INTERNAL ARCUATE FIBERS|PYRAMIDAL DECUSSATION|IMMEDIATE MIDBRAIN CROSSING/.test(raw)){
@@ -262,12 +266,12 @@ function renderActiveCallouts(primary,secondary){
  if(state.lesion){const hit=lesionNode()!==null,p=lesionPoint();cards.push({anchor:p,point:p,title:halt?['SIGNAL BLOCKED HERE']:wrapWords(LESIONS[state.lesion.type].name,30),lines:shortLesion().concat(!hit?['Selected signal route is spared']:[]),color:'#fb969e',kicker:state.lesion.type==='central'?'MIDLINE LESION':upper(state.lesion.side)+' LESION',key:'lesion|'+state.lesion.type+'|'+state.lesion.side+'|'+hit+'|'+halt,tag:'lesion'});}
  else if(halt){cards.push({anchor:primary.p,point:primary.p,title:['SIGNAL BLOCKED HERE'],lines:wrapWords(TRACTS[state.tract].cue,32).concat(['Downstream signal stopped']),color:'#f3bc71',kicker:'PATHWAY BLOCK',key:'block|'+state.tract+'|'+state.index,tag:'block'});}
  for(const c of cards){if(c.tag==='active'||c.tag==='A'||c.tag==='B')c.title=c.title.map(line=>line.toUpperCase());c.title=fitCalloutLines(c.title,'780 16px system-ui');c.lines=fitCalloutLines(c.lines,'14px system-ui');}
- const key=cards.map(c=>c.key).join('||');if(key!==focusCardsKey){focusCardsKey=key;const occupied=[];focusCardPositions=cards.map(c=>{calloutMeasure.font='780 16px system-ui';const headingWidth=Math.max(0,...c.title.map(s=>calloutMeasure.measureText(s).width));calloutMeasure.font='14px system-ui';const detailWidth=Math.max(0,...c.lines.map(s=>calloutMeasure.measureText(s).width));c.w=Math.max(190,Math.ceil(Math.max(headingWidth,detailWidth)+32));c.h=(c.kicker?47:33)+c.title.length*19+c.lines.length*17;const r=placeCard(c.anchor,c.w,c.h,occupied);occupied.push(r);return r;});}
+ const key=cards.map(c=>c.key).join('||');if(key!==focusCardsKey){focusCardsKey=key;const occupied=[];focusCardPositions=cards.map(c=>{calloutMeasure.font='780 16px system-ui';const headingWidth=Math.max(0,...c.title.map(s=>calloutMeasure.measureText(s).width));calloutMeasure.font='14px system-ui';const detailWidth=Math.max(0,...c.lines.map(s=>calloutMeasure.measureText(s).width));calloutMeasure.font='800 11px system-ui';const kickerWidth=c.kicker?calloutMeasure.measureText(c.kicker).width:0;c.w=Math.min(326,Math.max(220,Math.ceil(Math.max(headingWidth,detailWidth,kickerWidth)+30)));const titleY=c.kicker?42:28;c.h=titleY+c.title.length*20+c.lines.length*18+8;const r=placeCard(c.anchor,c.w,c.h,occupied);occupied.push(r);return r;});}
  const layer=$('labelLayer');layer.replaceChildren();for(let i=0;i<cards.length;i++){const c=cards[i],r=focusCardPositions[i],edge=nearestEdge(r,c.point),g=S('g',{'data-callout':c.tag,'data-anchor-x':c.point.x,'data-anchor-y':c.point.y,class:'active-callout'},layer);g.style.setProperty('--callout-color',c.color);
   S('path',{d:`M${c.point.x} ${c.point.y}L${edge.x} ${edge.y}`,class:'callout-leader'},g);
   S('rect',{x:r.x,y:r.y,width:r.w,height:r.h,rx:9,class:'anchored-card'},g);S('path',{d:`M${r.x+1} ${r.y+10}V${r.y+r.h-10}`,class:'callout-accent'},g);
-  if(c.kicker)S('text',{x:r.x+13,y:r.y+17,class:'callout-kicker'},g).textContent=c.kicker;
-  let y=r.y+(c.kicker?38:24);for(const line of c.title){S('text',{x:r.x+13,y,class:'callout-heading'},g).textContent=line;y+=19;}for(const line of c.lines){S('text',{x:r.x+13,y,class:'callout-meaning'},g).textContent=line;y+=17;}
+  if(c.kicker)S('text',{x:r.x+15,y:r.y+19,class:'callout-kicker'},g).textContent=c.kicker;
+  let y=r.y+(c.kicker?42:28);for(const line of c.title){S('text',{x:r.x+15,y,class:'callout-heading'},g).textContent=line;y+=20;}for(const line of c.lines){S('text',{x:r.x+15,y,class:'callout-meaning'},g).textContent=line;y+=18;}
  }
  if(halt)S('text',{x:primary.p.x,y:primary.p.y+5,'text-anchor':'middle',fill:'#fff','font-size':18,'font-weight':900,'data-stop-symbol':'true'},layer).textContent=state.block!==null?'Ⅱ':'×';
  const announce=cards.map(c=>[c.kicker,...c.title,...c.lines].filter(Boolean).join('. ')).join('. ');setText('activeAnnouncement',announce);
@@ -787,7 +791,7 @@ body[data-exam-focus=exam1] .anatomy .focus-anatomy:not(.region-relevant){opacit
 </script>
 <!-- Small teaching aids: independent from existing case and pathway logic. -->
 <style>
-.anatomy .anchored-card{fill:color-mix(in srgb,var(--callout-color) 28%,#102234);stroke:var(--callout-color);stroke-width:1.8;filter:drop-shadow(0 2px 4px #0009)}.anatomy .callout-heading{fill:#fff}.anatomy .callout-meaning{fill:#f0f5fa}
+.anatomy .anchored-card{fill:color-mix(in srgb,var(--callout-color) 18%,#07131f);stroke:var(--callout-color);stroke-width:1.8;filter:drop-shadow(0 2px 5px #000c)}.anatomy .callout-heading{fill:#fff}.anatomy .callout-meaning{fill:#f4f8fb}
 #beginnerPanel{border:1px solid #497b83;border-radius:9px;padding:12px;margin:12px 0;background:#17303e;font-size:13px;line-height:1.6}#beginnerPanel p{margin:6px 0}#beginnerPanel small{color:#b4d9de}#beginnerToggle{margin-bottom:8px;min-height:42px;padding:9px 12px;background:#17303e;color:#e8f5fa;border:1px solid #497b83;border-radius:7px;font:600 13px system-ui;cursor:pointer}#beginnerToggle[aria-pressed=true]{background:#215d64;border-color:#66dfcd}#beginnerToggle:disabled{opacity:.55;cursor:default}
 #reasonDialog{width:min(780px,94vw);max-height:92dvh;box-sizing:border-box;overflow:auto;background:#102031;color:#edf5fa;border:1px solid #4d7c88;border-radius:14px;padding:22px}#reasonDialog::backdrop{background:#020b16c9}#reasonDialog button,#reasonDialog select{font:inherit;background:#1c3549;color:#edf5fa;border:1px solid #517c8a;border-radius:7px;padding:10px;min-height:42px;max-width:100%}#reasonDialog select{width:100%}#reasonDialog h2{margin:0 0 8px}#reasonChoices{display:grid;gap:8px}#reasonChoices button{text-align:left}#reasonFeedback{padding:10px;border-left:3px solid #71d9c5;line-height:1.5}#reasonFeedback:empty{display:none}#reasonTrail{font-size:13px;line-height:1.6;padding-left:22px}#reasonNext{background:#215d64!important}#reasonClose{float:right}#reasonDialog p{line-height:1.5}#reasonDialog small{color:#adc6d6}
 </style>
